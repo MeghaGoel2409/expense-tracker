@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="E:/ExpenseTracker/ExpenseTracker/src/ExpenseTracker.Application/ExpenseTracker.Application.csproj" Id="b13adf5a-39c1-4905-a6cf-5a485d778c63" />
+  <Project Path="E:/ExpenseTracker/ExpenseTracker/src/ExpenseTracker.Domain/ExpenseTracker.Domain.csproj" Id="53f95a78-5129-454b-ace4-5c6a066ea03b" />
+  <Project Path="E:/ExpenseTracker/ExpenseTracker/src/ExpenseTracker.Infrastructure/ExpenseTracker.Infrastructure.csproj" Id="1971372f-3e62-45db-ae16-d9ac06d92e74" />
+  <Project Path="E:/ExpenseTracker/ExpenseTracker/src/ExpenseTracker.WebApi/ExpenseTracker.WebApi.csproj" />
+</Solution>

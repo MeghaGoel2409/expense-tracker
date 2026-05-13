@@ -1,0 +1,21 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { expenseApi } from "../api/expenseApi";
+import type { CreateExpenseRequest } from "../types/expense.types";
+import { getApiErrorMessage } from "@/lib/api/api-error";
+
+export function useCreateExpense() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (request: CreateExpenseRequest) => {
+      try {
+        return await expenseApi.createExpense(request);
+      } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to create expense."));
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+  });
+}
