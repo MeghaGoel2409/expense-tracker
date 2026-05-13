@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Expense } from "../types/expense.types";
 import { getCategoryStyle } from "../utils/categoryStyles";
-import { formatCurrency } from "@/common/utils/formatCurrency";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 type ExpenseListItemProps = {
   expense: Expense;

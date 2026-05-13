@@ -1,5 +1,5 @@
 import type { DashboardSummaryDto } from "../types/dashboard.types";
-import { formatCurrency } from "@/common/utils/formatCurrency";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 type Props = {
   data?: DashboardSummaryDto;
