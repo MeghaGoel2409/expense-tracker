@@ -1,5 +1,6 @@
 import { FilterDate, FilterPanel, FilterSelect } from "@/components/ui/filters";
 import type { Category } from "@/features/categories/types/category.types";
+import { useEffect, useState } from "react";
 
 export type ExpenseFilterValues = {
   fromDate: string;
@@ -11,8 +12,7 @@ type ExpenseFiltersProps = {
   values: ExpenseFilterValues;
   categories: Category[];
   isLoadingCategories?: boolean;
-  onChange: (values: ExpenseFilterValues) => void;
-  onSearch: () => void;
+  onSearch: (values: ExpenseFilterValues) => void;
   onClear: () => void;
 };
 
@@ -20,39 +20,44 @@ export function ExpenseFilters({
   values,
   categories,
   isLoadingCategories = false,
-  onChange,
   onSearch,
   onClear,
 }: ExpenseFiltersProps) {
+  const [draftValues, setDraftValues] = useState<ExpenseFilterValues>(values);
+
+  useEffect(() => {
+    setDraftValues(values);
+  }, [values]);
+
   const updateFilter = (name: keyof ExpenseFilterValues, value: string) => {
-    onChange({
-      ...values,
+    setDraftValues((current) => ({
+      ...current,
       [name]: value,
-    });
+    }));
   };
 
   return (
     <FilterPanel
       title="Expense Filters"
       description="Filter expenses by date range and category."
-      onSearch={onSearch}
+      onSearch={() => onSearch(draftValues)}
       onClear={onClear}
     >
       <FilterDate
         label="From Date"
-        value={values.fromDate}
+        value={draftValues.fromDate}
         onChange={(value) => updateFilter("fromDate", value)}
       />
 
       <FilterDate
         label="To Date"
-        value={values.toDate}
+        value={draftValues.toDate}
         onChange={(value) => updateFilter("toDate", value)}
       />
 
       <FilterSelect
         label="Category"
-        value={values.categoryId}
+        value={draftValues.categoryId}
         disabled={isLoadingCategories}
         placeholder="All Categories"
         options={categories.map((category) => ({

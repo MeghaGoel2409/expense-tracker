@@ -13,7 +13,6 @@ const defaultValues: ExpenseFormInput = {
   amount: 0,
   expenseDate: new Date().toISOString().slice(0, 10),
   categoryId: 0,
-  currency: "USD",
   notes: "",
   merchant: "",
   paymentMethod: "",

@@ -46,7 +46,6 @@ export function EditExpensePage() {
     amount: expense.amount,
     expenseDate: expense.expenseDate.slice(0, 10),
     categoryId: expense.categoryId,
-    currency: expense.currency ?? "USD",
     notes: expense.notes ?? "",
     merchant: expense.merchant ?? "",
     paymentMethod: expense.paymentMethod ?? "",

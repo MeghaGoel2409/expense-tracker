@@ -10,8 +10,7 @@ import { useCategories } from "@/features/categories/hooks/useCategories";
 
 export function ExpensesPage() {
   const {
-    filterValues,
-    setFilterValues,
+    appliedFilters,
     queryParams,
     applyFilters,
     clearFilters,
@@ -59,10 +58,9 @@ export function ExpensesPage() {
       </div>
 
       <ExpenseFilters
-        values={filterValues}
+        values={appliedFilters}
         categories={categories}
         isLoadingCategories={categoriesQuery.isLoading}
-        onChange={setFilterValues}
         onSearch={applyFilters}
         onClear={clearFilters}
       />
