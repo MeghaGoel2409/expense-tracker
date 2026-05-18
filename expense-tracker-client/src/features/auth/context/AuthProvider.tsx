@@ -6,11 +6,17 @@ import {
   type PropsWithChildren,
 } from "react";
 import { authApi } from "../api/authApi";
-import type { LoginRequest, RegisterRequest, User } from "../types/auth.types";
+import type {
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  User,
+} from "../types/auth.types";
 import { tokenStore } from "../utils/tokenStore";
 import { AuthContext, type AuthContextValue } from "./auth-context";
 import {
   registerAuthFailureHandler,
+  resetSessionExpiredNotification,
   unregisterAuthFailureHandler,
 } from "@/lib/api/refreshManager";
 
@@ -18,34 +24,50 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  const applyAuthenticatedSession = useCallback(
+    (data: AuthResponse["data"]) => {
+      if (!data?.accessToken || !data.user) {
+        throw new Error("Invalid authentication response.");
+      }
+
+      tokenStore.setAccessToken(data.accessToken);
+      tokenStore.setSessionHint();
+      resetSessionExpiredNotification();
+      setUser(data.user);
+    },
+    [],
+  );
+
   const clearSession = useCallback(() => {
     tokenStore.clear();
     setUser(null);
   }, []);
 
-  const register = useCallback(async (request: RegisterRequest) => {
-    const result = await authApi.register(request);
+  const register = useCallback(
+    async (request: RegisterRequest) => {
+      const result = await authApi.register(request);
 
-    if (!result.isSuccess || !result.data?.accessToken || !result.data.user) {
-      throw new Error(result.errors?.[0]?.message ?? "Registration failed.");
-    }
+      if (!result.isSuccess) {
+        throw new Error(result.errors?.[0]?.message ?? "Registration failed.");
+      }
 
-    tokenStore.setAccessToken(result.data.accessToken);
-    tokenStore.setSessionHint();
-    setUser(result.data.user);
-  }, []);
+      applyAuthenticatedSession(result.data);
+    },
+    [applyAuthenticatedSession],
+  );
 
-  const login = useCallback(async (request: LoginRequest) => {
-    const result = await authApi.login(request);
+  const login = useCallback(
+    async (request: LoginRequest) => {
+      const result = await authApi.login(request);
 
-    if (!result.isSuccess || !result.data?.accessToken || !result.data.user) {
-      throw new Error(result.errors?.[0]?.message ?? "Login failed.");
-    }
+      if (!result.isSuccess) {
+        throw new Error(result.errors?.[0]?.message ?? "Login failed.");
+      }
 
-    tokenStore.setAccessToken(result.data.accessToken);
-    tokenStore.setSessionHint();
-    setUser(result.data.user);
-  }, []);
+      applyAuthenticatedSession(result.data);
+    },
+    [applyAuthenticatedSession],
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -71,20 +93,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
 
       try {
-        const refreshResult = await authApi.refresh();
+        const result = await authApi.refresh();
 
-        if (
-          !refreshResult.isSuccess ||
-          !refreshResult.data?.accessToken ||
-          !refreshResult.data.user
-        ) {
+        if (!result.isSuccess) {
           clearSession();
           return;
         }
 
-        tokenStore.setAccessToken(refreshResult.data.accessToken);
-        tokenStore.setSessionHint();
-        setUser(refreshResult.data.user);
+        applyAuthenticatedSession(result.data);
       } catch {
         clearSession();
       } finally {
@@ -93,7 +109,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     };
 
     void initializeAuth();
-  }, [clearSession]);
+  }, [applyAuthenticatedSession, clearSession]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useExpenses } from "../hooks/useExpenses";
 import { useDeleteExpense } from "../hooks/useDeleteExpense";
@@ -7,8 +8,11 @@ import { ExpensesList } from "../components/ExpensesList";
 import { Pagination } from "@/components/ui/Pagination";
 import { QueryState } from "@/components/ui/QueryState";
 import { useCategories } from "@/features/categories/hooks/useCategories";
+import { ConfirmDialog } from "@/components/ui/dialogs/ConfirmDialog";
 
 export function ExpensesPage() {
+  const [expenseToDelete, setExpenseToDelete] = useState<number | null>(null);
+
   const {
     appliedFilters,
     queryParams,
@@ -28,15 +32,24 @@ export function ExpensesPage() {
     : [];
 
   const handleDelete = (id: number) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this expense?",
-    );
-
-    if (!confirmed) {
+    if (deleteExpenseMutation.isPending) {
       return;
     }
 
-    deleteExpenseMutation.mutate(id);
+    setExpenseToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (expenseToDelete === null) {
+      return;
+    }
+
+    try {
+      await deleteExpenseMutation.mutateAsync(expenseToDelete);
+      setExpenseToDelete(null);
+    } catch {
+      // Error toast is handled inside useDeleteExpense.
+    }
   };
 
   return (
@@ -58,6 +71,7 @@ export function ExpensesPage() {
       </div>
 
       <ExpenseFilters
+        key={JSON.stringify(appliedFilters)}
         values={appliedFilters}
         categories={categories}
         isLoadingCategories={categoriesQuery.isLoading}
@@ -100,6 +114,18 @@ export function ExpensesPage() {
           />
         )}
       </QueryState>
+
+      <ConfirmDialog
+        open={expenseToDelete !== null}
+        title="Delete expense"
+        description="Are you sure you want to delete this expense? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        tone="danger"
+        isLoading={deleteExpenseMutation.isPending}
+        onCancel={() => setExpenseToDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

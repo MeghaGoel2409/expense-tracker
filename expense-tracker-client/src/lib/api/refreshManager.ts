@@ -2,6 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { tokenStore } from "@/features/auth/utils/tokenStore";
 import type { RefreshTokenResponse } from "@/features/auth/types/auth.types";
 import { endpoints } from "./endpoints";
+import { notify } from "@/components/ui/toast/notify";
 
 type AuthFailureHandler = () => void;
 
@@ -12,6 +13,7 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
 let isRefreshing = false;
 let refreshPromise: Promise<string | null> | null = null;
 let onAuthFailure: AuthFailureHandler | null = null;
+let hasShownSessionExpiredNotification = false;
 
 function getRefreshUrl(): string {
   const baseURL = import.meta.env.VITE_API_BASE_URL;
@@ -21,6 +23,20 @@ function getRefreshUrl(): string {
   }
 
   return `${baseURL}${endpoints.auth.refresh}`;
+}
+
+function notifySessionExpiredOnce(): void {
+  if (hasShownSessionExpiredNotification) {
+    return;
+  }
+
+  hasShownSessionExpiredNotification = true;
+
+  notify.warning("Session expired", "Please sign in again to continue.");
+}
+
+export function resetSessionExpiredNotification(): void {
+  hasShownSessionExpiredNotification = false;
 }
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -33,7 +49,6 @@ async function refreshAccessToken(): Promise<string | null> {
     });
 
     const result = response.data as RefreshTokenResponse;
-
     const newAccessToken = result.data?.accessToken;
 
     if (!result.isSuccess || !newAccessToken) {
@@ -43,6 +58,7 @@ async function refreshAccessToken(): Promise<string | null> {
 
     tokenStore.setAccessToken(newAccessToken);
     tokenStore.setSessionHint();
+    resetSessionExpiredNotification();
 
     return newAccessToken;
   } catch {
@@ -70,6 +86,7 @@ export async function handleUnauthorizedError(
   }
 
   if (originalRequest._retry) {
+    notifySessionExpiredOnce();
     onAuthFailure?.();
     return Promise.reject(error);
   }
@@ -86,6 +103,7 @@ export async function handleUnauthorizedError(
   const newAccessToken = await refreshPromise;
 
   if (!newAccessToken) {
+    notifySessionExpiredOnce();
     onAuthFailure?.();
     return Promise.reject(error);
   }

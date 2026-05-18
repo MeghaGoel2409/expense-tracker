@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { expenseApi } from "../api/expenseApi";
 import type { UpdateExpenseRequest } from "../types/expense.types";
 import { getApiErrorMessage } from "@/lib/api/api-error";
+import { notify } from "@/components/ui/toast/notify";
 
 export function useUpdateExpense() {
   const queryClient = useQueryClient();
@@ -19,6 +20,13 @@ export function useUpdateExpense() {
       await queryClient.invalidateQueries({
         queryKey: ["expense", variables.id],
       });
+      notify.success(
+        "Expense updated",
+        "Your changes were saved successfully.",
+      );
+    },
+    onError: (error) => {
+      notify.error("Could not update expense", error.message);
     },
   });
 }

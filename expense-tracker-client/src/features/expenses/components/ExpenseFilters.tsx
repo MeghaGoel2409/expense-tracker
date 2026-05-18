@@ -1,6 +1,6 @@
 import { FilterDate, FilterPanel, FilterSelect } from "@/components/ui/filters";
 import type { Category } from "@/features/categories/types/category.types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export type ExpenseFilterValues = {
   fromDate: string;
@@ -24,10 +24,6 @@ export function ExpenseFilters({
   onClear,
 }: ExpenseFiltersProps) {
   const [draftValues, setDraftValues] = useState<ExpenseFilterValues>(values);
-
-  useEffect(() => {
-    setDraftValues(values);
-  }, [values]);
 
   const updateFilter = (name: keyof ExpenseFilterValues, value: string) => {
     setDraftValues((current) => ({
