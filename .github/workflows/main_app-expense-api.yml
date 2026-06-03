@@ -1,0 +1,63 @@
+name: Build and deploy ASP.Net Core app to Azure Web App - app-expense-api
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: app-expense-api
+  SOLUTION_FILE: expense-tracker-api/ExpenseTracker.slnx
+  WEBAPI_PROJECT: expense-tracker-api/src/ExpenseTracker.WebApi/ExpenseTracker.WebApi.csproj
+  PUBLISH_DIR: ./publish
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore Solution
+        run: dotnet restore "${{ env.SOLUTION_FILE }}"
+
+      - name: Build Solution
+        run: dotnet build "${{ env.SOLUTION_FILE }}" --configuration Release --no-restore
+
+      - name: Publish Web API
+        run: dotnet publish "${{ env.WEBAPI_PROJECT }}" --configuration Release --no-build --output "${{ env.PUBLISH_DIR }}"
+
+      - name: Upload Publish Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: expense-api
+          path: ${{ env.PUBLISH_DIR }}
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+
+    steps:
+      - name: Download Publish Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: expense-api
+          path: ./publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: Production
+          package: ./publish
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D74CFCA5167C4F38980DE82CF3B17D45 }}
