@@ -8,11 +8,9 @@ on:
 
 env:
   AZURE_WEBAPP_NAME: app-expense-api
-  SOLUTION_FILE: expense-tracker-api/ExpenseTracker.slnx
   WEBAPI_PROJECT: expense-tracker-api/src/ExpenseTracker.WebApi/ExpenseTracker.WebApi.csproj
   PUBLISH_DIR: ./publish
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
 jobs:
   build:
@@ -25,16 +23,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.x"
+          dotnet-version: "10.0.x"
 
-      - name: Restore Solution
-        run: dotnet restore "${{ env.SOLUTION_FILE }}"
+      - name: Restore Web API
+        run: dotnet restore "${{ env.WEBAPI_PROJECT }}"
 
-      - name: Build Solution
-        run: dotnet build "${{ env.SOLUTION_FILE }}" --configuration Release --no-restore
+      - name: Build Web API
+        run: dotnet build "${{ env.WEBAPI_PROJECT }}" --configuration Release --no-restore
 
       - name: Publish Web API
         run: dotnet publish "${{ env.WEBAPI_PROJECT }}" --configuration Release --no-build --output "${{ env.PUBLISH_DIR }}"
