@@ -11,6 +11,7 @@ env:
   SOLUTION_FILE: expense-tracker-api/ExpenseTracker.slnx
   WEBAPI_PROJECT: expense-tracker-api/src/ExpenseTracker.WebApi/ExpenseTracker.WebApi.csproj
   PUBLISH_DIR: ./publish
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
