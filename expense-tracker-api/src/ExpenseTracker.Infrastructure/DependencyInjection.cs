@@ -27,9 +27,26 @@ public static class DependencyInjection
         // =========================
         // Database
         // =========================
+        var databaseProvider = configuration["DatabaseProvider"] ?? "SqlServer";
+
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection")));
+        {
+            if (databaseProvider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase))
+            {
+                var sqliteConnectionString =
+                    configuration.GetConnectionString("SqliteConnection")
+                    ?? "Data Source=C:\\home\\data\\ExpenseTracker.db";
+
+                options.UseSqlite(sqliteConnectionString);
+            }
+            else
+            {
+                var sqlServerConnectionString =
+                    configuration.GetConnectionString("DefaultConnection");
+
+                options.UseSqlServer(sqlServerConnectionString);
+            }
+        });        
 
         // =========================
         // JWT Options (validated)
