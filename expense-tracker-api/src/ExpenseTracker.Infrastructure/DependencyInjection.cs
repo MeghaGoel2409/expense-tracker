@@ -35,7 +35,7 @@ public static class DependencyInjection
             {
                 var sqliteConnectionString =
                     configuration.GetConnectionString("SqliteConnection")
-                    ?? "Data Source=C:\\home\\data\\ExpenseTracker.db";
+                    ?? "Data Source=C:\\home\\site\\ExpenseTracker.db";
 
                 options.UseSqlite(sqliteConnectionString);
             }
