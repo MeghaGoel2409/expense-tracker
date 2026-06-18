@@ -5,6 +5,7 @@ import { useDeleteExpense } from "../hooks/useDeleteExpense";
 import { useExpenseFilters } from "../hooks/useExpenseFilters";
 import { ExpenseFilters } from "../components/ExpenseFilters";
 import { ExpensesList } from "../components/ExpensesList";
+import { getExpensePeriodLabel } from "../constants/expensePeriods";
 import { Pagination } from "@/components/ui/Pagination";
 import { QueryState } from "@/components/ui/QueryState";
 import { useCategories } from "@/features/categories/hooks/useCategories";
@@ -31,6 +32,22 @@ export function ExpensesPage() {
     ? categoriesQuery.data
     : [];
 
+  const totalCount = expensesQuery.data?.totalCount ?? 0;
+
+  const selectedCategory = categories.find(
+    (category) => String(category.id) === appliedFilters.categoryId,
+  );
+
+  const selectedPeriod =
+    appliedFilters.period === "custom"
+      ? `${appliedFilters.fromDate || "Start"} to 
+            ${appliedFilters.toDate || "End"}`
+      : getExpensePeriodLabel(appliedFilters.period);
+
+  const emptyDescription =
+    `No transactions found for ${selectedPeriod}` +
+    (selectedCategory ? `and ${selectedCategory}` : "");
+
   const handleDelete = (id: number) => {
     if (deleteExpenseMutation.isPending) {
       return;
@@ -54,11 +71,12 @@ export function ExpensesPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Expenses</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Transactions</h1>
           <p className="mt-1 text-sm text-gray-600">
-            View and manage your expenses.
+            {totalCount.toLocaleString()} transaction
+            {totalCount === 1 ? "" : "s"} found
           </p>
         </div>
 
@@ -79,14 +97,26 @@ export function ExpensesPage() {
         onClear={clearFilters}
       />
 
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+        <span>Showing</span>
+
+        <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+          {selectedPeriod}
+        </span>
+
+        <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+          {selectedCategory?.name ?? "All categories"}
+        </span>
+      </div>
+
       <QueryState
         isLoading={expensesQuery.isLoading}
         isError={expensesQuery.isError}
         isEmpty={expenses.length === 0}
         errorMessage={expensesQuery.error?.message}
         loadingMessage="Loading expenses..."
-        emptyTitle="No expenses found"
-        emptyDescription="No expenses match your current filters. Try clearing filters or add a new expense."
+        emptyTitle="No transactions found"
+        emptyDescription={emptyDescription}
         emptyIcon="💳"
         onRetry={() => expensesQuery.refetch()}
         emptyAction={

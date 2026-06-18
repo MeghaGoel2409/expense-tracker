@@ -8,6 +8,15 @@ export interface PagedResult<T> {
   totalPages: number;
 }
 
+export type ExpensePeriod =
+  | "last30"
+  | "thisMonth"
+  | "lastMonth"
+  | "last90"
+  | "thisYear"
+  | "all"
+  | "custom";
+
 export interface Expense {
   id: number;
   amount: number;

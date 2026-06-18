@@ -21,7 +21,7 @@ export function AppShell() {
             to="/expenses"
             className="block rounded-md px-3 py-2 hover:bg-gray-100"
           >
-            Expenses
+            Transactions
           </Link>
 
           <Link

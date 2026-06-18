@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { ExpenseFilterValues } from "../components/ExpenseFilters";
+import { getExpenseDateRange } from "../utils/expenseDateRanges";
+import type { ExpensePeriod } from "../types/expense.types";
 
 function getNumberParam(value: string | null, defaultValue: number) {
   const parsed = Number(value);
@@ -13,14 +15,19 @@ export function useExpenseFilters() {
   const pageNumber = getNumberParam(searchParams.get("pageNumber"), 1);
   const pageSize = getNumberParam(searchParams.get("pageSize"), 10);
 
-  const appliedFilters: ExpenseFilterValues = useMemo(
-    () => ({
-      fromDate: searchParams.get("fromDate") ?? "",
-      toDate: searchParams.get("toDate") ?? "",
+  const appliedFilters: ExpenseFilterValues = useMemo(() => {
+    const period =
+      (searchParams.get("period") as ExpensePeriod | null) ?? "last30";
+
+    const dateRange = getExpenseDateRange(period);
+
+    return {
+      period,
+      fromDate: searchParams.get("fromDate") ?? dateRange.fromDate,
+      toDate: searchParams.get("toDate") ?? dateRange.toDate,
       categoryId: searchParams.get("categoryId") ?? "",
-    }),
-    [searchParams],
-  );
+    };
+  }, [searchParams]);
 
   const queryParams = useMemo(
     () => ({
@@ -42,9 +49,13 @@ export function useExpenseFilters() {
 
     nextParams.set("pageNumber", "1");
     nextParams.set("pageSize", String(pageSize));
+    nextParams.set("period", filters.period);
 
-    if (filters.fromDate) nextParams.set("fromDate", filters.fromDate);
-    if (filters.toDate) nextParams.set("toDate", filters.toDate);
+    if (filters.period === "custom") {
+      if (filters.fromDate) nextParams.set("fromDate", filters.fromDate);
+      if (filters.toDate) nextParams.set("toDate", filters.toDate);
+    }
+
     if (filters.categoryId) nextParams.set("categoryId", filters.categoryId);
 
     setSearchParams(nextParams);
@@ -55,6 +66,7 @@ export function useExpenseFilters() {
 
     nextParams.set("pageNumber", "1");
     nextParams.set("pageSize", String(pageSize));
+    nextParams.set("period", "last30");
 
     setSearchParams(nextParams);
   }

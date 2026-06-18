@@ -1,8 +1,18 @@
-import { FilterDate, FilterPanel, FilterSelect } from "@/components/ui/filters";
+import {
+  FilterActionButton,
+  FilterDate,
+  FilterPanel,
+  FilterSelect,
+} from "@/components/ui/filters";
+import { FilterChipGroup } from "@/components/ui/filters/FilterChipGroup";
 import type { Category } from "@/features/categories/types/category.types";
+import { Search, X } from "lucide-react";
 import { useState } from "react";
+import { expensePeriodOptions } from "../constants/expensePeriods";
+import type { ExpensePeriod } from "../types/expense.types";
 
 export type ExpenseFilterValues = {
+  period: ExpensePeriod;
   fromDate: string;
   toDate: string;
   categoryId: string;
@@ -25,43 +35,105 @@ export function ExpenseFilters({
 }: ExpenseFiltersProps) {
   const [draftValues, setDraftValues] = useState<ExpenseFilterValues>(values);
 
-  const updateFilter = (name: keyof ExpenseFilterValues, value: string) => {
+  const isCustomPeriod = draftValues.period === "custom";
+
+  const updateDraftValue = (name: keyof ExpenseFilterValues, value: string) => {
     setDraftValues((current) => ({
       ...current,
       [name]: value,
     }));
   };
 
+  const applyFilters = (nextValues: ExpenseFilterValues) => {
+    setDraftValues(nextValues);
+    onSearch(nextValues);
+  };
+
+  const handlePeriodChange = (period: ExpensePeriod) => {
+    const nextValues: ExpenseFilterValues = {
+      ...draftValues,
+      period,
+      fromDate: period === "custom" ? draftValues.fromDate : "",
+      toDate: period === "custom" ? draftValues.toDate : "",
+    };
+
+    if (period === "custom") {
+      setDraftValues(nextValues);
+      return;
+    }
+
+    applyFilters(nextValues);
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    const nextValues: ExpenseFilterValues = {
+      ...draftValues,
+      categoryId,
+    };
+
+    if (isCustomPeriod) {
+      setDraftValues(nextValues);
+      return;
+    }
+
+    applyFilters(nextValues);
+  };
+
   return (
     <FilterPanel
-      title="Expense Filters"
-      description="Filter expenses by date range and category."
       onSearch={() => onSearch(draftValues)}
-      onClear={onClear}
+      actions={
+        <>
+          {isCustomPeriod && (
+            <FilterActionButton type="submit" tone="primary" icon={Search}>
+              Search
+            </FilterActionButton>
+          )}
+
+          <FilterActionButton onClick={onClear} icon={X}>
+            Clear
+          </FilterActionButton>
+        </>
+      }
     >
-      <FilterDate
-        label="From Date"
-        value={draftValues.fromDate}
-        onChange={(value) => updateFilter("fromDate", value)}
-      />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+        <div className="flex flex-wrap gap-2">
+          <FilterChipGroup
+            value={draftValues.period}
+            options={expensePeriodOptions}
+            onChange={handlePeriodChange}
+          />
+        </div>
 
-      <FilterDate
-        label="To Date"
-        value={draftValues.toDate}
-        onChange={(value) => updateFilter("toDate", value)}
-      />
+        <div className="w-full lg:w-56">
+          <FilterSelect
+            value={draftValues.categoryId}
+            disabled={isLoadingCategories}
+            placeholder="All Categories"
+            options={categories.map((category) => ({
+              label: category.name,
+              value: String(category.id),
+            }))}
+            onChange={handleCategoryChange}
+          />
+        </div>
+      </div>
 
-      <FilterSelect
-        label="Category"
-        value={draftValues.categoryId}
-        disabled={isLoadingCategories}
-        placeholder="All Categories"
-        options={categories.map((category) => ({
-          label: category.name,
-          value: String(category.id),
-        }))}
-        onChange={(value) => updateFilter("categoryId", value)}
-      />
+      {isCustomPeriod && (
+        <div className="mt-3 grid gap-3 md:grid-cols-2 lg:max-w-md">
+          <FilterDate
+            label="From Date"
+            value={draftValues.fromDate}
+            onChange={(value) => updateDraftValue("fromDate", value)}
+          />
+
+          <FilterDate
+            label="To Date"
+            value={draftValues.toDate}
+            onChange={(value) => updateDraftValue("toDate", value)}
+          />
+        </div>
+      )}
     </FilterPanel>
   );
 }

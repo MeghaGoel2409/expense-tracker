@@ -16,7 +16,7 @@ export function ExpensesList({
   const groupedExpenses = groupExpenses(expenses);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {Object.entries(groupedExpenses).map(([label, group]) => (
         <ExpenseGroup
           key={label}

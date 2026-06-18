@@ -1,55 +1,28 @@
 import type { ReactNode } from "react";
 
 type FilterPanelProps = {
-  title?: string;
-  description?: string;
   children: ReactNode;
+  actions?: ReactNode;
   onSearch: () => void;
-  onClear: () => void;
 };
 
-export function FilterPanel({
-  title = "Filters",
-  description,
-  children,
-  onSearch,
-  onClear,
-}: FilterPanelProps) {
+export function FilterPanel({ children, actions, onSearch }: FilterPanelProps) {
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(event) => {
+        event.preventDefault();
         onSearch();
       }}
-      className="mb-6 rounded-2xl border bg-white p-4 shadow-sm"
+      className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm"
     >
-      <div className="mb-4">
-        <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 flex-1">{children}</div>
 
-        {description && (
-          <p className="mt-1 text-sm text-gray-600">{description}</p>
+        {actions && (
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {actions}
+          </div>
         )}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        {children}
-
-        <div className="flex items-end gap-2">
-          <button
-            type="submit"
-            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white"
-          >
-            Search
-          </button>
-
-          <button
-            type="button"
-            onClick={onClear}
-            className="rounded-lg border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Clear
-          </button>
-        </div>
       </div>
     </form>
   );
