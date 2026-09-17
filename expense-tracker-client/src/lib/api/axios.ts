@@ -39,6 +39,7 @@ apiClient.interceptors.response.use(
 
     if (
       status !== 401 ||
+      status !== 403 ||
       isLoginRequest ||
       isRegisterRequest ||
       isRefreshRequest ||

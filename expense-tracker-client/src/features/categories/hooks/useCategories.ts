@@ -9,7 +9,9 @@ export function useCategories() {
       try {
         return await categoryApi.getCategories();
       } catch (error) {
-        throw new Error(getApiErrorMessage(error, "Failed to load expenses."));
+        throw new Error(
+          await getApiErrorMessage(error, "Failed to load expenses."),
+        );
       }
     },
   });

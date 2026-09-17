@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useExpenses } from "../hooks/useExpenses";
 import { useDeleteExpense } from "../hooks/useDeleteExpense";
@@ -10,9 +10,21 @@ import { Pagination } from "@/components/ui/Pagination";
 import { QueryState } from "@/components/ui/QueryState";
 import { useCategories } from "@/features/categories/hooks/useCategories";
 import { ConfirmDialog } from "@/components/ui/dialogs/ConfirmDialog";
+import { Download } from "lucide-react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { FeatureKeys } from "@/features/feature-settings/types/featureSettings.types";
+import { useCreateExpenseExport } from "@/features/expense-exports/hooks/useCreateExpenseExport";
+import { useExpenseExportStatus } from "@/features/expense-exports/hooks/useExpenseExportStatus";
+
+import { useDownloadExpenseExport } from "@/features/expense-exports/hooks/useDownloadExpenseExport";
+import { notify } from "@/components/ui/toast/notify";
 
 export function ExpensesPage() {
   const [expenseToDelete, setExpenseToDelete] = useState<number | null>(null);
+  const [activeExportJobId, setActiveExportJobId] = useState<number | null>(
+    null,
+  );
+  const handledExportJobIdRef = useRef<number | null>(null);
 
   const {
     appliedFilters,
@@ -25,6 +37,80 @@ export function ExpensesPage() {
   const expensesQuery = useExpenses(queryParams);
   const categoriesQuery = useCategories();
   const deleteExpenseMutation = useDeleteExpense();
+  const createExportMutation = useCreateExpenseExport();
+
+  const exportStatusQuery = useExpenseExportStatus(activeExportJobId);
+  const downloadExportMutation = useDownloadExpenseExport();
+
+  useEffect(() => {
+    if (
+      activeExportJobId === null ||
+      handledExportJobIdRef.current === activeExportJobId
+    ) {
+      return;
+    }
+
+    if (exportStatusQuery.isError) {
+      handledExportJobIdRef.current = activeExportJobId;
+
+      notify.error(
+        "Could not check export status",
+        exportStatusQuery.error?.message ||
+          "The export status could not be retrieved.",
+      );
+
+      queueMicrotask(() => {
+        setActiveExportJobId(null);
+      });
+
+      return;
+    }
+
+    if (!exportStatusQuery.data) {
+      return;
+    }
+
+    const { status, errorMessage } = exportStatusQuery.data;
+
+    if (status === "Completed") {
+      handledExportJobIdRef.current = activeExportJobId;
+
+      downloadExportMutation.mutate(activeExportJobId, {
+        onSettled: () => {
+          setActiveExportJobId(null);
+        },
+      });
+
+      return;
+    }
+
+    if (status === "Failed") {
+      handledExportJobIdRef.current = activeExportJobId;
+
+      notify.error(
+        "Export failed",
+        errorMessage || "The expense export could not be completed.",
+      );
+
+      queueMicrotask(() => {
+        setActiveExportJobId(null);
+      });
+    }
+  }, [
+    activeExportJobId,
+    exportStatusQuery.data,
+    exportStatusQuery.error,
+    exportStatusQuery.isError,
+    downloadExportMutation,
+  ]);
+
+  const { hasFeature } = useAuth();
+
+  const isExportEnabled = hasFeature(FeatureKeys.expenseExport);
+  const isExportInProgress =
+    activeExportJobId !== null ||
+    createExportMutation.isPending ||
+    downloadExportMutation.isPending;
 
   const expenses = expensesQuery.data?.items ?? [];
 
@@ -46,7 +132,7 @@ export function ExpensesPage() {
 
   const emptyDescription =
     `No transactions found for ${selectedPeriod}` +
-    (selectedCategory ? `and ${selectedCategory}` : "");
+    (selectedCategory ? `and ${selectedCategory.name}` : "");
 
   const handleDelete = (id: number) => {
     if (deleteExpenseMutation.isPending) {
@@ -69,6 +155,26 @@ export function ExpensesPage() {
     }
   };
 
+  const handleExport = async () => {
+    handledExportJobIdRef.current = null;
+    try {
+      const result = await createExportMutation.mutateAsync({
+        format: "Csv",
+        filter: {
+          categoryId: appliedFilters.categoryId
+            ? Number(appliedFilters.categoryId)
+            : undefined,
+          fromDate: appliedFilters.fromDate || undefined,
+          toDate: appliedFilters.toDate || undefined,
+        },
+      });
+
+      setActiveExportJobId(result.exportJobId);
+    } catch {
+      // Error toast is handled inside useCreateExpenseExport.
+    }
+  };
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -80,12 +186,33 @@ export function ExpensesPage() {
           </p>
         </div>
 
-        <Link
-          to="/expenses/new"
-          className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-        >
-          Add Expense
-        </Link>
+        <div className="flex items-center gap-2">
+          {isExportEnabled && (
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={isExportInProgress || totalCount === 0}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Download className="h-4 w-4" />
+
+              {createExportMutation.isPending
+                ? "Requesting..."
+                : downloadExportMutation.isPending
+                  ? "Downloading..."
+                  : activeExportJobId !== null
+                    ? "Preparing..."
+                    : "Export CSV"}
+            </button>
+          )}
+
+          <Link
+            to="/expenses/new"
+            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+          >
+            Add Expense
+          </Link>
+        </div>
       </div>
 
       <ExpenseFilters

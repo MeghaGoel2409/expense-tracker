@@ -23,7 +23,7 @@ export function useLogin() {
       try {
         await login(request);
       } catch (error) {
-        throw new Error(getApiErrorMessage(error, "Login failed."));
+        throw new Error(await getApiErrorMessage(error, "Login failed."));
       }
     },
     onSuccess: () => {

@@ -36,7 +36,7 @@ public class Expense : BaseAuditableEntity
 
     public decimal Amount { get; private set; }
     public DateTime ExpenseDate { get; private set; }
-    public string Currency { get; set; }
+    public string Currency { get; private set; } = null!;
     public string? Notes { get; private set; }
     public string? Merchant { get; private set; }
     public string? PaymentMethod { get; private set; }
@@ -87,6 +87,6 @@ public class Expense : BaseAuditableEntity
         if (currency.Length > 10)
             throw new ArgumentException("Currency cannot exceed 10 characters.");
 
-        Currency = currency.Trim().ToUpper();
+        Currency = currency.Trim().ToUpperInvariant();
     }
 }

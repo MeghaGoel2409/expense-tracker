@@ -17,6 +17,10 @@ namespace ExpenseTracker.Application.Features.Expenses.Interfaces
         ExpenseQueryFilter filter,
         CancellationToken cancellationToken = default);
 
+        Task<IReadOnlyList<Expense>> GetByFilterAsync(
+    ExpenseQueryFilter filter,
+    CancellationToken cancellationToken = default);
+
         Task AddAsync(Expense expense, CancellationToken cancellationToken = default);
 
         void Update(Expense expense);

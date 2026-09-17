@@ -12,7 +12,9 @@ export function useUpdateExpense() {
       try {
         return await expenseApi.updateExpense(request.id, request);
       } catch (error) {
-        throw new Error(getApiErrorMessage(error, "Failed to update expense."));
+        throw new Error(
+          await getApiErrorMessage(error, "Failed to update expense."),
+        );
       }
     },
     onSuccess: async (_, variables) => {

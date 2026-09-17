@@ -5,6 +5,7 @@ export type AuthContextValue = {
   user: User | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
+  hasFeature(feature: string): boolean;
   login: (request: LoginRequest) => Promise<void>;
   register: (request: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;

@@ -19,10 +19,12 @@ import {
   resetSessionExpiredNotification,
   unregisterAuthFailureHandler,
 } from "@/lib/api/refreshManager";
+import { useFeatureSettings } from "@/features/feature-settings/hooks/useFeatureSettings";
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const featureSettingsQuery = useFeatureSettings(user !== null);
 
   const applyAuthenticatedSession = useCallback(
     (data: AuthResponse["data"]) => {
@@ -111,9 +113,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
     void initializeAuth();
   }, [applyAuthenticatedSession, clearSession]);
 
+  const hasFeature = useCallback(
+    (feature: string) => {
+      if (!user) {
+        return false;
+      }
+
+      return featureSettingsQuery.data?.features[feature] ?? false;
+    },
+    [user, featureSettingsQuery.data],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      hasFeature,
       isAuthenticated: !!user,
       isInitializing,
       login,
@@ -122,7 +136,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setUser,
       clearSession,
     }),
-    [user, isInitializing, login, register, logout, clearSession],
+    [user, hasFeature, isInitializing, login, register, logout, clearSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

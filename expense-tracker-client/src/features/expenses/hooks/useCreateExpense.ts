@@ -12,7 +12,9 @@ export function useCreateExpense() {
       try {
         return await expenseApi.createExpense(request);
       } catch (error) {
-        throw new Error(getApiErrorMessage(error, "Failed to create expense."));
+        throw new Error(
+          await getApiErrorMessage(error, "Failed to create expense."),
+        );
       }
     },
     onSuccess: async () => {

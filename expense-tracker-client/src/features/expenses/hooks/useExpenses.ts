@@ -10,7 +10,9 @@ export function useExpenses(params?: ExpenseQueryParams) {
       try {
         return await expenseApi.getExpenses(params);
       } catch (error) {
-        throw new Error(getApiErrorMessage(error, "Failed to load expenses."));
+        throw new Error(
+          await getApiErrorMessage(error, "Failed to load expenses."),
+        );
       }
     },
   });

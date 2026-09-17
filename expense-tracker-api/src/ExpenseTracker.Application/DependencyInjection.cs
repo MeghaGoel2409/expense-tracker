@@ -6,11 +6,17 @@ using ExpenseTracker.Application.Features.Dashboard.Interfaces;
 using ExpenseTracker.Application.Features.Dashboard.Queries;
 using ExpenseTracker.Application.Features.Dashboard.Services;
 using ExpenseTracker.Application.Features.Dashboard.Validators;
+using ExpenseTracker.Application.Features.ExpenseExports.DTOs;
+using ExpenseTracker.Application.Features.ExpenseExports.Interfaces;
+using ExpenseTracker.Application.Features.ExpenseExports.Services;
+using ExpenseTracker.Application.Features.ExpenseExports.Validators;
 using ExpenseTracker.Application.Features.Expenses.Commands;
 using ExpenseTracker.Application.Features.Expenses.Interfaces;
 using ExpenseTracker.Application.Features.Expenses.Queries;
 using ExpenseTracker.Application.Features.Expenses.Services;
 using ExpenseTracker.Application.Features.Expenses.Validators;
+using ExpenseTracker.Application.Features.FeatureSettings.Interfaces;
+using ExpenseTracker.Application.Features.FeatureSettings.Services;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<GetExpensesQueryHandler>();
         services.AddScoped<GetExpenseByIdQueryHandler>();
         services.AddScoped<IExpenseService, ExpenseService>();
+        services.AddScoped<IExpenseExportService, ExpenseExportService>();
+        services.AddScoped<IFeatureSettingsService, FeatureSettingsService>();
 
         services.AddScoped<GetCategoriesQueryHandler>();
         services.AddScoped<CreateCategoryCommandHandler>();
@@ -37,8 +45,9 @@ public static class DependencyInjection
         services.AddScoped<IValidator<UpdateExpenseCommand>, UpdateExpenseCommandValidator>();
         services.AddScoped<IValidator<DeleteExpenseCommand>, DeleteExpenseCommandValidator>();
         services.AddScoped<IValidator<GetExpensesQuery>, GetExpensesQueryValidator>();
-
         services.AddScoped<IValidator<CreateCategoryCommand>, CreateCategoryCommandValidator>();
+        services.AddScoped<IValidator<ExpenseExportFilterDto>, ExpenseExportFilterDtoValidator>();
+        services.AddScoped<IValidator<CreateExpenseExportRequest>, CreateExpenseExportRequestValidator>();
 
         services.AddScoped<IValidator<GetDashboardSummaryQuery>, GetDashboardSummaryQueryValidator>();
 

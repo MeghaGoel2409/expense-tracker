@@ -11,7 +11,9 @@ export function useDeleteExpense() {
       try {
         return await expenseApi.deleteExpense(id);
       } catch (error) {
-        throw new Error(getApiErrorMessage(error, "Failed to delete expense."));
+        throw new Error(
+          await getApiErrorMessage(error, "Failed to delete expense."),
+        );
       }
     },
     onSuccess: async () => {

@@ -10,7 +10,16 @@ export const endpoints = {
     base: "/expenses",
     byId: (id: number) => `/expenses/${id}`,
   },
+  expenseExports: {
+    base: "/expense-exports",
+    byId: (exportJobId: number) => `/expense-exports/${exportJobId}`,
+    download: (exportJobId: number) =>
+      `/expense-exports/${exportJobId}/download`,
+  },
   categories: {
     base: "/categories",
+  },
+  featureSettings: {
+    base: "/feature-settings",
   },
 } as const;

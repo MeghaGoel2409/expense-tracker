@@ -13,7 +13,9 @@ export function useRegister() {
       try {
         await register(request);
       } catch (error) {
-        throw new Error(getApiErrorMessage(error, "Registration failed."));
+        throw new Error(
+          await getApiErrorMessage(error, "Registration failed."),
+        );
       }
     },
     onSuccess: () => {

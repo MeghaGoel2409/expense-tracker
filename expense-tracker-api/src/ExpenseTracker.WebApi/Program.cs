@@ -2,6 +2,7 @@ using ExpenseTracker.Application;
 using ExpenseTracker.Infrastructure;
 using ExpenseTracker.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.AddSerilogLogging();
@@ -9,6 +10,9 @@ builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration)
     .AddWebApi(builder.Configuration);
+
+builder.Services.AddFeatureManagement();
+//builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 

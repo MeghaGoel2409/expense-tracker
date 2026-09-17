@@ -9,7 +9,9 @@ export function useExpense(id: number) {
       try {
         return await expenseApi.getExpenseById(id);
       } catch (error) {
-        throw new Error(getApiErrorMessage(error, "Failed to load expenses."));
+        throw new Error(
+          await getApiErrorMessage(error, "Failed to load expenses."),
+        );
       }
     },
     enabled: !!id,

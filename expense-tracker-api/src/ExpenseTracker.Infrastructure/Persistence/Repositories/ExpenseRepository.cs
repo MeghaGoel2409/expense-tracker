@@ -35,8 +35,49 @@ public class ExpenseRepository : IExpenseRepository
     }
 
     public async Task<PagedData<Expense>> GetPagedByFilterAsync(
-        ExpenseQueryFilter filter,
-        CancellationToken cancellationToken = default)
+    ExpenseQueryFilter filter,
+    CancellationToken cancellationToken = default)
+    {
+        var query = BuildFilteredQuery(filter);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((filter.PageNumber - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedData<Expense>
+        {
+            Items = items,
+            TotalCount = totalCount
+        };
+    }
+
+    public async Task<IReadOnlyList<Expense>> GetByFilterAsync(
+    ExpenseQueryFilter filter,
+    CancellationToken cancellationToken = default)
+    {
+        return await BuildFilteredQuery(filter)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(Expense expense, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.Expenses.AddAsync(expense, cancellationToken);
+    }
+
+    public void Update(Expense expense)
+    {
+        _dbContext.Expenses.Update(expense);
+    }
+
+    public void Delete(Expense expense)
+    {
+        _dbContext.Expenses.Remove(expense);
+    }
+
+    private IQueryable<Expense> BuildFilteredQuery(ExpenseQueryFilter filter)
     {
         var query = _dbContext.Expenses
             .AsNoTracking()
@@ -59,35 +100,7 @@ public class ExpenseRepository : IExpenseRepository
             query = query.Where(x => x.ExpenseDate <= filter.ToDate.Value);
         }
 
-        query = ApplySorting(query, filter.SortBy, filter.SortDescending);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .ToListAsync(cancellationToken);
-
-        return new PagedData<Expense>
-        {
-            Items = items,
-            TotalCount = totalCount
-        };
-    }
-
-    public async Task AddAsync(Expense expense, CancellationToken cancellationToken = default)
-    {
-        await _dbContext.Expenses.AddAsync(expense, cancellationToken);
-    }
-
-    public void Update(Expense expense)
-    {
-        _dbContext.Expenses.Update(expense);
-    }
-
-    public void Delete(Expense expense)
-    {
-        _dbContext.Expenses.Remove(expense);
+        return ApplySorting(query, filter.SortBy, filter.SortDescending);
     }
 
     private static IQueryable<Expense> ApplySorting(
