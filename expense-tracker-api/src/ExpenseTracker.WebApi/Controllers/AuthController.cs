@@ -251,7 +251,7 @@ public sealed class AuthController : BaseApiController
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
-                Path = "/api/auth/refresh"
+                Path = "/"
             });
     }
 
