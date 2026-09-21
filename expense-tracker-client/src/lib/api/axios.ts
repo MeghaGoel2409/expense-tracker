@@ -38,8 +38,7 @@ apiClient.interceptors.response.use(
     const isLogoutRequest = requestUrl?.includes("/auth/logout");
 
     if (
-      status !== 401 ||
-      status !== 403 ||
+      (status !== 401 && status !== 403) ||
       isLoginRequest ||
       isRegisterRequest ||
       isRefreshRequest ||

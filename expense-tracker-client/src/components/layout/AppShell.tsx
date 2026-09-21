@@ -24,12 +24,12 @@ export function AppShell() {
             Transactions
           </Link>
 
-          <Link
+          {/*  <Link
             to="/categories"
             className="block rounded-md px-3 py-2 hover:bg-gray-100"
           >
             Categories
-          </Link>
+          </Link> */}
         </nav>
       </aside>
 
