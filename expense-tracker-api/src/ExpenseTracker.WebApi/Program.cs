@@ -25,13 +25,18 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        if (dbProvider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase))
+        if (app.Environment.IsDevelopment())
         {
-            await dbContext.Database.EnsureCreatedAsync();
-        }
-        else
-        {
-            await dbContext.Database.MigrateAsync();
+            if (dbProvider.Equals(
+                "Sqlite",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                await dbContext.Database.EnsureCreatedAsync();
+            }
+            else
+            {
+                await dbContext.Database.MigrateAsync();
+            }
         }
 
         await ApplicationDbContextSeeder.SeedAsync(

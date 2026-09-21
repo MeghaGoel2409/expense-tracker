@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "expense-tracker-api/src/ExpenseTracker.WebApi/**"
+      - "expense-tracker-api/src/ExpenseTracker.Application/**"
+      - "expense-tracker-api/src/ExpenseTracker.Domain/**"
+      - "expense-tracker-api/src/ExpenseTracker.Infrastructure/**"
+      - ".github/workflows/main_app-expense-api.yml"
   workflow_dispatch:
 
 env:

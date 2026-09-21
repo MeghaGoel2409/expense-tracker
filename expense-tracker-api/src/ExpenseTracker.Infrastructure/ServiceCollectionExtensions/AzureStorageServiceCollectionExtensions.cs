@@ -1,4 +1,6 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure.Core;
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
 using ExpenseTracker.Application.Features.ExpenseExports.Interfaces;
 using ExpenseTracker.Infrastructure.Messaging;
@@ -15,14 +17,16 @@ public static class AzureStorageServiceCollectionExtensions
         IConfiguration configuration)
     {
         var connectionString = configuration["AzureWebJobsStorage"];
+        var accountName = configuration["AzureWebJobsStorage:accountName"];
+        var queueName = configuration["ExpenseExportsQueueName"];
 
-        if (string.IsNullOrWhiteSpace(connectionString))
+        if (string.IsNullOrWhiteSpace(connectionString) &&
+            string.IsNullOrWhiteSpace(accountName))
         {
             throw new InvalidOperationException(
-                "AzureWebJobsStorage is not configured.");
+                "Configure either 'AzureWebJobsStorage' for local development " +
+                "or 'AzureWebJobsStorage:accountName' for Azure.");
         }
-
-        var queueName = configuration["ExpenseExportsQueueName"];
 
         if (string.IsNullOrWhiteSpace(queueName))
         {
@@ -30,25 +34,51 @@ public static class AzureStorageServiceCollectionExtensions
                 "ExpenseExportsQueueName is not configured.");
         }
 
-        services.AddSingleton(_ =>
+        services.AddSingleton<TokenCredential>(_ =>
+            new DefaultAzureCredential());
+
+        services.AddSingleton(sp =>
         {
             var clientOptions = new QueueClientOptions
             {
                 MessageEncoding = QueueMessageEncoding.Base64
             };
 
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                return new QueueClient(
+                    connectionString,
+                    queueName,
+                    clientOptions);
+            }
+
+            var queueUri = new Uri(
+                $"https://{accountName}.queue.core.windows.net/{queueName}");
+
             return new QueueClient(
-                connectionString,
-                queueName,
+                queueUri,
+                sp.GetRequiredService<TokenCredential>(),
                 clientOptions);
+        });
+
+        services.AddSingleton(sp =>
+        {
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                return new BlobServiceClient(connectionString);
+            }
+
+            var blobServiceUri = new Uri(
+                $"https://{accountName}.blob.core.windows.net");
+
+            return new BlobServiceClient(
+                blobServiceUri,
+                sp.GetRequiredService<TokenCredential>());
         });
 
         services.AddScoped<
             IExpenseExportQueuePublisher,
             AzureExpenseExportQueuePublisher>();
-
-        services.AddSingleton(
-            _ => new BlobServiceClient(connectionString));
 
         services.AddScoped<
             IExpenseExportStorage,

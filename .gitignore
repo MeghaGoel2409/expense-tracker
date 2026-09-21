@@ -4,6 +4,8 @@ obj/
 .vs/
 *.user
 *.suo
+local.settings.json
+/function-publish/
 
 # Node
 node_modules/
